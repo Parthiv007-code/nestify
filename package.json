@@ -1,0 +1,16 @@
+{
+  "name": "rental-marketplace",
+  "version": "1.0.0",
+  "description": "A two-sided marketplace: renters browse listings, owners post and manage them.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

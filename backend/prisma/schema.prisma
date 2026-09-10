@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String
+  state     String?
+  district  String?
+  city      String?
+  pincode   String?
+  createdAt DateTime @default(now())
+
+  listings       Listing[] @relation("ListingOwner")
+  rentedListings Listing[] @relation("ListingRenter")
+}
+
+model Listing {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  rent        Int
+  state       String
+  district    String
+  city        String
+  pincode     String
+  bedrooms    Int
+  bathrooms   Int
+  imageUrl    String?
+  status      String   @default("AVAILABLE")
+  createdAt   DateTime @default(now())
+
+  owner       User     @relation("ListingOwner", fields: [ownerId], references: [id])
+  ownerId     Int
+
+  renter      User?    @relation("ListingRenter", fields: [renterId], references: [id])
+  renterId    Int?
+}
