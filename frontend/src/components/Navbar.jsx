@@ -11,7 +11,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b">
+    <nav className="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
       <Link to="/" className="text-xl font-bold">RentEasy</Link>
       <div className="flex gap-4 items-center">
         <Link to="/listings">Search</Link>

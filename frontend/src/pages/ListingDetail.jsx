@@ -38,8 +38,10 @@ export default function ListingDetail() {
       <p className="mt-6 text-gray-800">{listing.description}</p>
 
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <p className="font-semibold">Contact owner</p>
-        <p className="text-gray-700">{listing.owner.name} — {listing.owner.email}</p>
+      <p className="font-semibold">Contact owner</p>
+      <p className="text-gray-700">
+      {listing.owner ? `${listing.owner.name} — ${listing.owner.email}` : 'Contact info unavailable'}
+      </p>
       </div>
     </div>
   );
