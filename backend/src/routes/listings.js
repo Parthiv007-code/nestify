@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prismaClient');
 const { requireAuth, requireOwner } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -74,13 +75,15 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, requireOwner, async (req, res) => {
+router.post('/', requireAuth, requireOwner, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, imageUrl } = req.body;
+    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
 
     if (!title || !description || !rent || !state || !district || !city || !pincode || !bedrooms || !bathrooms) {
       return res.status(400).json({ error: 'Missing required listing fields' });
     }
+
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const listing = await prisma.listing.create({
       data: {
@@ -93,7 +96,7 @@ router.post('/', requireAuth, requireOwner, async (req, res) => {
         pincode,
         bedrooms: Number(bedrooms),
         bathrooms: Number(bathrooms),
-        imageUrl: imageUrl || null,
+        imageUrl,
         ownerId: req.user.userId,
       },
     });
@@ -105,7 +108,7 @@ router.post('/', requireAuth, requireOwner, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAuth, requireOwner, async (req, res) => {
+router.put('/:id', requireAuth, requireOwner, upload.single('image'), async (req, res) => {
   try {
     const listing = await prisma.listing.findUnique({ where: { id: Number(req.params.id) } });
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
@@ -113,7 +116,8 @@ router.put('/:id', requireAuth, requireOwner, async (req, res) => {
       return res.status(403).json({ error: "You don't own this listing" });
     }
 
-    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, imageUrl } = req.body;
+    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
 
     const updated = await prisma.listing.update({
       where: { id: listing.id },

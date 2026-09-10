@@ -7,7 +7,9 @@ const listingsRoutes = require('./routes/listings');
 const usersRoutes = require('./routes/users');
 
 const app = express();
+const path = require('path');
 
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(cors());           // allows your React app (different port) to call this API
 app.use(express.json());   // parses incoming JSON request bodies into req.body
 
