@@ -4,17 +4,18 @@ import api from '../api/client';
 import AddListingForm from '../components/AddListingForm';
 
 function ListingCard({ listing }) {
-  const imageSrc = listing.imageUrl?.startsWith('/uploads')
-    ? `http://localhost:4000${listing.imageUrl}`
-    : listing.imageUrl;
+  const firstImage = listing.images?.[0]?.url || listing.imageUrl;
+  const imageSrc = firstImage?.startsWith('/uploads')
+    ? `http://localhost:4000${firstImage}`
+    : firstImage;
 
   return (
-    <Link to={`/listings/${listing.id}`} className="border rounded-lg overflow-hidden hover:shadow-lg transition dark:border-gray-700">
+    <Link to={`/listings/${listing.id}`} className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden hover:border-accent transition-colors">
       <img src={imageSrc} alt={listing.title} className="w-full h-48 object-cover" />
       <div className="p-4">
-        <h3 className="font-semibold text-lg">{listing.title}</h3>
-        <p className="text-gray-600 dark:text-gray-400">{listing.city}, {listing.district}, {listing.state} — {listing.pincode}</p>
-        <p className="mt-2 font-bold">₹{listing.rent}/month</p>
+        <h3 className="font-heading font-bold text-base">{listing.title}</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{listing.city}, {listing.district}, {listing.state} — {listing.pincode}</p>
+        <p className="mt-2 font-bold text-accent">₹{listing.rent}/month</p>
         <p className="text-sm text-gray-500 dark:text-gray-400">{listing.bedrooms} bed · {listing.bathrooms} bath</p>
       </div>
     </Link>
@@ -100,29 +101,29 @@ export default function Home() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{mainTitle}</h1>
-        <button onClick={() => setSearchOpen(!searchOpen)} className="border rounded-lg px-4 py-2 font-semibold dark:border-gray-700">
+        <h1 className="font-heading text-2xl font-extrabold">{mainTitle}</h1>
+        <button onClick={() => setSearchOpen(!searchOpen)} className="border border-gray-200 dark:border-gray-700 rounded-md px-4 py-2 text-sm font-semibold hover:border-accent transition-colors">
           {searchOpen ? 'Close search' : 'Search'}
         </button>
       </div>
 
       {searchOpen && (
         <form onSubmit={handleSearch} className="flex flex-wrap gap-3 mb-6">
-          <input name="state" type="text" placeholder="State" value={filters.state} onChange={handleFilterChange} required className="border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="district" type="text" placeholder="District" value={filters.district} onChange={handleFilterChange} required className="border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="city" type="text" placeholder="City / Town / Village" value={filters.city} onChange={handleFilterChange} className="border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="pincode" type="text" placeholder="Pincode" value={filters.pincode} onChange={handleFilterChange} className="border rounded-lg p-2 w-28 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="minRent" type="number" placeholder="Min rent" value={filters.minRent} onChange={handleFilterChange} className="border rounded-lg p-2 w-28 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="maxRent" type="number" placeholder="Max rent" value={filters.maxRent} onChange={handleFilterChange} className="border rounded-lg p-2 w-28 dark:border-gray-700 dark:bg-gray-800" />
-          <input name="bedrooms" type="number" placeholder="Bedrooms" value={filters.bedrooms} onChange={handleFilterChange} className="border rounded-lg p-2 w-28 dark:border-gray-700 dark:bg-gray-800" />
-          <button type="submit" className="bg-black text-white dark:bg-white dark:text-black rounded-lg px-4 py-2 font-semibold">Search</button>
+          <input name="state" type="text" placeholder="State" value={filters.state} onChange={handleFilterChange} required className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm" />
+          <input name="district" type="text" placeholder="District" value={filters.district} onChange={handleFilterChange} required className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm" />
+          <input name="city" type="text" placeholder="City / Town / Village" value={filters.city} onChange={handleFilterChange} className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm" />
+          <input name="pincode" type="text" placeholder="Pincode" value={filters.pincode} onChange={handleFilterChange} className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm w-28" />
+          <input name="minRent" type="number" placeholder="Min rent" value={filters.minRent} onChange={handleFilterChange} className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm w-28" />
+          <input name="maxRent" type="number" placeholder="Max rent" value={filters.maxRent} onChange={handleFilterChange} className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm w-28" />
+          <input name="bedrooms" type="number" placeholder="Bedrooms" value={filters.bedrooms} onChange={handleFilterChange} className="border border-gray-200 dark:border-gray-700 dark:bg-[#15171A] rounded-md p-2 text-sm w-28" />
+          <button type="submit" className="bg-accent text-white rounded-md px-4 py-2 text-sm font-semibold hover:bg-accent-dark transition-colors">Search</button>
         </form>
       )}
 
       {mainLoading ? (
         <p>Loading...</p>
       ) : mainListings.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-400">No listings found.</p>
+        <p className="text-gray-500 dark:text-gray-400">No listings found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {mainListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
@@ -132,9 +133,9 @@ export default function Home() {
       {user?.role === 'OWNER' && (
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Your Listings</h2>
+            <h2 className="font-heading text-xl font-bold">Your Listings</h2>
             <button onClick={() => setShowAddForm(!showAddForm)}
-              className="border rounded-lg px-4 py-2 font-semibold dark:border-gray-700">
+              className="border border-gray-200 dark:border-gray-700 rounded-md px-4 py-2 text-sm font-semibold hover:border-accent transition-colors">
               {showAddForm ? 'Cancel' : '+ Add listing'}
             </button>
           </div>
@@ -150,7 +151,7 @@ export default function Home() {
           )}
 
           {ownerListings.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400">You haven't posted any listings yet.</p>
+            <p className="text-gray-500 dark:text-gray-400">You haven't posted any listings yet.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {ownerListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
@@ -161,9 +162,9 @@ export default function Home() {
 
       {user?.role === 'RENTER' && (
         <div className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Your Rentals</h2>
+          <h2 className="font-heading text-xl font-bold mb-4">Your Rentals</h2>
           {rentedListings.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400">You don't have any active rentals.</p>
+            <p className="text-gray-500 dark:text-gray-400">You don't have any active rentals.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {rentedListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}

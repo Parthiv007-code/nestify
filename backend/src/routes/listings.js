@@ -5,7 +5,6 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-// GET /api/listings?state=&district=&city=&pincode=&minRent=&maxRent=&bedrooms=
 router.get('/', async (req, res) => {
   try {
     const { state, district, city, pincode, minRent, maxRent, bedrooms } = req.query;
@@ -25,7 +24,7 @@ router.get('/', async (req, res) => {
     const listings = await prisma.listing.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { owner: { select: { name: true, email: true } } },
+      include: { owner: { select: { name: true, email: true } }, images: { orderBy: { order: 'asc' } } },
     });
 
     res.json(listings);
@@ -40,6 +39,7 @@ router.get('/mine/all', requireAuth, requireOwner, async (req, res) => {
     const listings = await prisma.listing.findMany({
       where: { ownerId: req.user.userId },
       orderBy: { createdAt: 'desc' },
+      include: { images: { orderBy: { order: 'asc' } } },
     });
     res.json(listings);
   } catch (err) {
@@ -53,6 +53,7 @@ router.get('/rented-by-me', requireAuth, async (req, res) => {
     const listings = await prisma.listing.findMany({
       where: { renterId: req.user.userId },
       orderBy: { createdAt: 'desc' },
+      include: { images: { orderBy: { order: 'asc' } } },
     });
     res.json(listings);
   } catch (err) {
@@ -65,7 +66,7 @@ router.get('/:id', async (req, res) => {
   try {
     const listing = await prisma.listing.findUnique({
       where: { id: Number(req.params.id) },
-      include: { owner: { select: { name: true, email: true } } },
+      include: { owner: { select: { name: true, email: true } }, images: { orderBy: { order: 'asc' } } },
     });
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
     res.json(listing);
@@ -75,7 +76,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, requireOwner, upload.single('image'), async (req, res) => {
+router.post('/', requireAuth, requireOwner, upload.array('images', 20), async (req, res) => {
   try {
     const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
 
@@ -83,7 +84,7 @@ router.post('/', requireAuth, requireOwner, upload.single('image'), async (req, 
       return res.status(400).json({ error: 'Missing required listing fields' });
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const files = req.files || [];
 
     const listing = await prisma.listing.create({
       data: {
@@ -96,9 +97,16 @@ router.post('/', requireAuth, requireOwner, upload.single('image'), async (req, 
         pincode,
         bedrooms: Number(bedrooms),
         bathrooms: Number(bathrooms),
-        imageUrl,
+        imageUrl: files[0] ? `/uploads/${files[0].filename}` : null, // keep legacy field in sync with the first photo
         ownerId: req.user.userId,
+        images: {
+          create: files.map((file, index) => ({
+            url: `/uploads/${file.filename}`,
+            order: index,
+          })),
+        },
       },
+      include: { images: true },
     });
 
     res.status(201).json(listing);
@@ -108,16 +116,17 @@ router.post('/', requireAuth, requireOwner, upload.single('image'), async (req, 
   }
 });
 
-router.put('/:id', requireAuth, requireOwner, upload.single('image'), async (req, res) => {
+router.put('/:id', requireAuth, requireOwner, upload.array('images', 20), async (req, res) => {
   try {
-    const listing = await prisma.listing.findUnique({ where: { id: Number(req.params.id) } });
+    const listing = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { images: true } });
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
     if (listing.ownerId !== req.user.userId) {
       return res.status(403).json({ error: "You don't own this listing" });
     }
 
     const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
+    const files = req.files || [];
+    const existingCount = listing.images.length;
 
     const updated = await prisma.listing.update({
       where: { id: listing.id },
@@ -131,8 +140,16 @@ router.put('/:id', requireAuth, requireOwner, upload.single('image'), async (req
         ...(pincode && { pincode }),
         ...(bedrooms && { bedrooms: Number(bedrooms) }),
         ...(bathrooms && { bathrooms: Number(bathrooms) }),
-        ...(imageUrl && { imageUrl }),
+        ...(files.length > 0 && {
+          images: {
+            create: files.map((file, index) => ({
+              url: `/uploads/${file.filename}`,
+              order: existingCount + index,
+            })),
+          },
+        }),
       },
+      include: { images: { orderBy: { order: 'asc' } } },
     });
 
     res.json(updated);

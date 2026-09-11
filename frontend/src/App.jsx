@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { DarkModeProvider } from './hooks/useDarkMode';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Listings from './pages/Listings';
@@ -10,17 +11,19 @@ import Settings from './pages/Settings';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/listings" element={<Listings />} />
-        <Route path="/listings/:id" element={<ListingDetail />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<OwnerDashboard />} />
-      </Routes>
-    </BrowserRouter>
+    <DarkModeProvider>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/listings" element={<Listings />} />
+          <Route path="/listings/:id" element={<ListingDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/dashboard" element={<OwnerDashboard />} />
+        </Routes>
+      </BrowserRouter>
+    </DarkModeProvider>
   );
 }

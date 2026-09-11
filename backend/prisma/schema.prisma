@@ -34,7 +34,7 @@ model Listing {
   pincode     String
   bedrooms    Int
   bathrooms   Int
-  imageUrl    String?
+  imageUrl    String?  // legacy single-image field, kept so old seeded listings still show a photo
   status      String   @default("AVAILABLE")
   createdAt   DateTime @default(now())
 
@@ -43,4 +43,16 @@ model Listing {
 
   renter      User?    @relation("ListingRenter", fields: [renterId], references: [id])
   renterId    Int?
+
+  images      ListingImage[]
+}
+
+model ListingImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId Int
 }
