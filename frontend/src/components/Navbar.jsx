@@ -18,7 +18,6 @@ export default function Navbar() {
         RentEasy
       </Link>
       <div className="flex gap-6 items-center text-sm font-medium">
-        <Link to="/listings" className="hover:text-accent transition-colors">Search</Link>
         <button
           onClick={() => setIsDark(!isDark)}
           aria-label="Toggle dark mode"

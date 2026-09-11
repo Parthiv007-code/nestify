@@ -11,7 +11,12 @@ function ListingCard({ listing }) {
 
   return (
     <Link to={`/listings/${listing.id}`} className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden hover:border-accent transition-colors">
-      <img src={imageSrc} alt={listing.title} className="w-full h-48 object-cover" />
+      <div className="relative">
+        <img src={imageSrc} alt={listing.title} className="w-full h-48 object-cover" />
+        <span className="absolute top-2 left-2 bg-white/90 dark:bg-black/70 text-xs font-semibold px-2 py-1 rounded-md">
+          {listing.type === 'PG' ? 'PG' : 'For Rent'}
+        </span>
+      </div>
       <div className="p-4">
         <h3 className="font-heading font-bold text-base">{listing.title}</h3>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{listing.city}, {listing.district}, {listing.state} — {listing.pincode}</p>
@@ -24,8 +29,12 @@ function ListingCard({ listing }) {
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [mainListings, setMainListings] = useState([]);
-  const [mainTitle, setMainTitle] = useState('Available Listings');
+  const [mode, setMode] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('ALL');
+
+  const [cityListings, setCityListings] = useState([]);
+  const [districtListings, setDistrictListings] = useState([]);
+  const [searchListings, setSearchListings] = useState([]);
   const [mainLoading, setMainLoading] = useState(true);
 
   const [ownerListings, setOwnerListings] = useState([]);
@@ -40,8 +49,8 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      fetchMainListings({});
-      setMainLoading(false);
+      setMode('all');
+      fetchAllListings('ALL');
       return;
     }
 
@@ -50,11 +59,12 @@ export default function Home() {
         const me = response.data;
         setUser(me);
 
-        if (me.city) {
-          setMainTitle('Near You');
-          fetchMainListings({ city: me.city });
+        if (me.city && me.district) {
+          setMode('near');
+          fetchNearYou(me, 'ALL');
         } else {
-          fetchMainListings({});
+          setMode('all');
+          fetchAllListings('ALL');
         }
 
         if (me.role === 'OWNER') {
@@ -66,20 +76,60 @@ export default function Home() {
       })
       .catch((err) => {
         console.error(err);
-        fetchMainListings({});
+        setMode('all');
+        fetchAllListings('ALL');
       });
   }, []);
 
-  const fetchMainListings = (activeFilters) => {
-    setMainLoading(true);
+  const buildParams = (activeFilters) => {
     const params = new URLSearchParams();
     Object.entries(activeFilters).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
+    return params.toString();
+  };
 
-    api.get(`/listings?${params.toString()}`)
+  const fetchNearYou = async (me, type) => {
+    setMainLoading(true);
+    try {
+      const typeParam = type === 'ALL' ? '' : type;
+
+      const cityRes = await api.get(`/listings?${buildParams({ city: me.city, type: typeParam })}`);
+      const districtRes = await api.get(`/listings?${buildParams({ district: me.district, type: typeParam })}`);
+
+      const cityResults = cityRes.data;
+      const cityIds = new Set(cityResults.map((l) => l.id));
+      const restOfDistrict = districtRes.data.filter((l) => !cityIds.has(l.id));
+
+      setCityListings(cityResults);
+      setDistrictListings(restOfDistrict);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setMainLoading(false);
+    }
+  };
+
+  const fetchAllListings = (type) => {
+    setMainLoading(true);
+    const typeParam = type === 'ALL' ? '' : type;
+    api.get(`/listings?${buildParams({ type: typeParam })}`)
       .then((response) => {
-        setMainListings(response.data);
+        setSearchListings(response.data);
+        setMainLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setMainLoading(false);
+      });
+  };
+
+  const fetchSearch = (activeFilters, type) => {
+    setMainLoading(true);
+    const typeParam = type === 'ALL' ? '' : type;
+    api.get(`/listings?${buildParams({ ...activeFilters, type: typeParam })}`)
+      .then((response) => {
+        setSearchListings(response.data);
         setMainLoading(false);
       })
       .catch((err) => {
@@ -94,14 +144,27 @@ export default function Home() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setMainTitle('Search Results');
-    fetchMainListings(filters);
+    setMode('search');
+    fetchSearch(filters, typeFilter);
+  };
+
+  const handleTypeFilterChange = (t) => {
+    setTypeFilter(t);
+    if (mode === 'near' && user) {
+      fetchNearYou(user, t);
+    } else if (mode === 'search') {
+      fetchSearch(filters, t);
+    } else {
+      fetchAllListings(t);
+    }
   };
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-heading text-2xl font-extrabold">{mainTitle}</h1>
+        <h1 className="font-heading text-2xl font-extrabold">
+          {mode === 'near' ? 'Near You' : mode === 'search' ? 'Search Results' : 'Available Listings'}
+        </h1>
         <button onClick={() => setSearchOpen(!searchOpen)} className="border border-gray-200 dark:border-gray-700 rounded-md px-4 py-2 text-sm font-semibold hover:border-accent transition-colors">
           {searchOpen ? 'Close search' : 'Search'}
         </button>
@@ -120,13 +183,52 @@ export default function Home() {
         </form>
       )}
 
+      <div className="flex gap-2 mb-4">
+        {['ALL', 'RENT', 'PG'].map((t) => (
+          <button
+            key={t}
+            onClick={() => handleTypeFilterChange(t)}
+            className={`px-4 py-2 rounded-md text-sm font-semibold border transition-colors ${
+              typeFilter === t
+                ? 'bg-accent text-white border-accent'
+                : 'border-gray-200 dark:border-gray-700 hover:border-accent'
+            }`}
+          >
+            {t === 'ALL' ? 'All' : t === 'RENT' ? 'For Rent' : 'PG'}
+          </button>
+        ))}
+      </div>
+
       {mainLoading ? (
         <p>Loading...</p>
-      ) : mainListings.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No listings found.</p>
+      ) : mode === 'near' ? (
+        cityListings.length === 0 && districtListings.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400 mb-12">No listings found near you yet.</p>
+        ) : (
+          <>
+            {cityListings.length > 0 && (
+              <div className="mb-10">
+                <h2 className="font-heading text-lg font-bold mb-3">Top picks in {user.city}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {cityListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+                </div>
+              </div>
+            )}
+            {districtListings.length > 0 && (
+              <div className="mb-12">
+                <h2 className="font-heading text-lg font-bold mb-3">More across {user.district}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {districtListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+                </div>
+              </div>
+            )}
+          </>
+        )
+      ) : searchListings.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400 mb-12">No listings found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {mainListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+          {searchListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
         </div>
       )}
 

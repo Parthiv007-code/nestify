@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { state, district, city, pincode, minRent, maxRent, bedrooms } = req.query;
+    const { state, district, city, pincode, minRent, maxRent, bedrooms, type } = req.query;
 
     const where = {};
     if (state) where.state = { contains: state };
@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
     if (city) where.city = { contains: city };
     if (pincode) where.pincode = { contains: pincode };
     if (bedrooms) where.bedrooms = Number(bedrooms);
+    if (type) where.type = type;
     if (minRent || maxRent) {
       where.rent = {};
       if (minRent) where.rent.gte = Number(minRent);
@@ -78,7 +79,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', requireAuth, requireOwner, upload.array('images', 20), async (req, res) => {
   try {
-    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
+    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, type } = req.body;
 
     if (!title || !description || !rent || !state || !district || !city || !pincode || !bedrooms || !bathrooms) {
       return res.status(400).json({ error: 'Missing required listing fields' });
@@ -97,7 +98,8 @@ router.post('/', requireAuth, requireOwner, upload.array('images', 20), async (r
         pincode,
         bedrooms: Number(bedrooms),
         bathrooms: Number(bathrooms),
-        imageUrl: files[0] ? `/uploads/${files[0].filename}` : null, // keep legacy field in sync with the first photo
+        type: type === 'PG' ? 'PG' : 'RENT',
+        imageUrl: files[0] ? `/uploads/${files[0].filename}` : null,
         ownerId: req.user.userId,
         images: {
           create: files.map((file, index) => ({
@@ -124,7 +126,7 @@ router.put('/:id', requireAuth, requireOwner, upload.array('images', 20), async 
       return res.status(403).json({ error: "You don't own this listing" });
     }
 
-    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms } = req.body;
+    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, type } = req.body;
     const files = req.files || [];
     const existingCount = listing.images.length;
 
@@ -140,6 +142,7 @@ router.put('/:id', requireAuth, requireOwner, upload.array('images', 20), async 
         ...(pincode && { pincode }),
         ...(bedrooms && { bedrooms: Number(bedrooms) }),
         ...(bathrooms && { bathrooms: Number(bathrooms) }),
+        ...(type && { type: type === 'PG' ? 'PG' : 'RENT' }),
         ...(files.length > 0 && {
           images: {
             create: files.map((file, index) => ({

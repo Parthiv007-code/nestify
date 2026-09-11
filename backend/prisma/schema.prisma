@@ -36,6 +36,7 @@ model Listing {
   bathrooms   Int
   imageUrl    String?  // legacy single-image field, kept so old seeded listings still show a photo
   status      String   @default("AVAILABLE")
+  type        String   @default("RENT") // "RENT" or "PG"
   createdAt   DateTime @default(now())
 
   owner       User     @relation("ListingOwner", fields: [ownerId], references: [id])
