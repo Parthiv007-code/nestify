@@ -1,16 +1,25 @@
 {
-  "name": "rental-marketplace",
-  "version": "1.0.0",
-  "description": "A two-sided marketplace: renters browse listings, owners post and manage them.",
-  "main": "index.js",
+  "name": "rental-nextjs",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.0",
+    "next": "16.3.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.5",
+    "tailwindcss": "^4"
   }
 }

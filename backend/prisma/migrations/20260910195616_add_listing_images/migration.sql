@@ -1,9 +1,0 @@
--- CreateTable
-CREATE TABLE "ListingImage" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "url" TEXT NOT NULL,
-    "order" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "listingId" INTEGER NOT NULL,
-    CONSTRAINT "ListingImage_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "Listing" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
