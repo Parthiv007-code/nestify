@@ -55,7 +55,7 @@ export async function POST(request) {
 
   try {
     await connectDB();
-    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, imageUrl } = await request.json();
+    const { title, description, rent, state, district, city, pincode, bedrooms, bathrooms, images } = await request.json();
 
     if (!title || !description || !rent || !state || !district || !city || !pincode || !bedrooms || !bathrooms) {
       return Response.json({ error: 'Missing required listing fields' }, { status: 400 });
@@ -65,7 +65,7 @@ export async function POST(request) {
       title, description, rent: Number(rent),
       state, district, city, pincode,
       bedrooms: Number(bedrooms), bathrooms: Number(bathrooms),
-      imageUrl: imageUrl || null,
+      images: Array.isArray(images) ? images : [],
       owner: auth.userId,
     });
 

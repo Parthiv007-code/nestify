@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/apiClient';
 
+const inputClass = "border border-gray-300 dark:border-gray-600 rounded-lg p-3 w-full mt-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100";
+const labelClass = "text-sm font-semibold text-gray-700 dark:text-gray-300";
+
 export default function Settings() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', state: '', district: '', city: '', pincode: '' });
@@ -38,9 +41,7 @@ export default function Settings() {
       });
   }, [router]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,35 +66,35 @@ export default function Settings() {
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="text-sm font-semibold">
+        <label className={labelClass}>
           Name
-          <input name="name" type="text" value={form.name} onChange={handleChange} className="border rounded-lg p-3 w-full mt-1" />
+          <input name="name" type="text" value={form.name} onChange={handleChange} className={inputClass} />
         </label>
 
-        <label className="text-sm font-semibold">
+        <label className={labelClass}>
           State
-          <input name="state" type="text" value={form.state} onChange={handleChange} className="border rounded-lg p-3 w-full mt-1" />
+          <input name="state" type="text" value={form.state} onChange={handleChange} className={inputClass} />
         </label>
 
-        <label className="text-sm font-semibold">
+        <label className={labelClass}>
           District
-          <input name="district" type="text" value={form.district} onChange={handleChange} className="border rounded-lg p-3 w-full mt-1" />
+          <input name="district" type="text" value={form.district} onChange={handleChange} className={inputClass} />
         </label>
 
-        <label className="text-sm font-semibold">
+        <label className={labelClass}>
           City / Town / Village
-          <input name="city" type="text" value={form.city} onChange={handleChange} className="border rounded-lg p-3 w-full mt-1" />
+          <input name="city" type="text" value={form.city} onChange={handleChange} className={inputClass} />
         </label>
 
-        <label className="text-sm font-semibold">
+        <label className={labelClass}>
           Pincode
-          <input name="pincode" type="text" value={form.pincode} onChange={handleChange} className="border rounded-lg p-3 w-full mt-1" />
+          <input name="pincode" type="text" value={form.pincode} onChange={handleChange} className={inputClass} />
         </label>
 
-        {error && <p className="text-red-600">{error}</p>}
-        {success && <p className="text-green-600">Saved!</p>}
+        {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
+        {success && <p className="text-green-600 dark:text-green-400">Saved!</p>}
 
-        <button type="submit" disabled={saving} className="bg-black text-white rounded-lg p-3 font-semibold disabled:opacity-50">
+        <button type="submit" disabled={saving} className="bg-black dark:bg-white text-white dark:text-black rounded-lg p-3 font-semibold disabled:opacity-50">
           {saving ? 'Saving...' : 'Save changes'}
         </button>
       </form>

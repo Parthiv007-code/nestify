@@ -36,7 +36,7 @@ export async function PUT(request, { params }) {
     }
 
     const body = await request.json();
-    const allowedFields = ['title', 'description', 'rent', 'state', 'district', 'city', 'pincode', 'bedrooms', 'bathrooms', 'imageUrl'];
+    const allowedFields = ['title', 'description', 'rent', 'state', 'district', 'city', 'pincode', 'bedrooms', 'bathrooms', 'images'];
     allowedFields.forEach((field) => {
       if (body[field] !== undefined) listing[field] = body[field];
     });

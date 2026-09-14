@@ -10,11 +10,13 @@ const ListingSchema = new mongoose.Schema({
   pincode: { type: String, required: true },
   bedrooms: { type: Number, required: true },
   bathrooms: { type: Number, required: true },
-  imageUrl: { type: String, default: null },
 
-  // No foreign key constraint here (MongoDB doesn't enforce this the way
-  // SQL does) — just an ObjectId reference. `ref: 'User'` tells Mongoose
-  // which model to look in if we ask it to "populate" this field later.
+  // Array of base64 data-URI strings, stored directly in MongoDB rather than
+  // as files on disk — Vercel's serverless functions have a read-only,
+  // ephemeral filesystem, so anything written there disappears between
+  // requests. This sidesteps needing a separate file-storage service.
+  images: { type: [String], default: [] },
+
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, {
   timestamps: true,
